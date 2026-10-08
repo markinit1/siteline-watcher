@@ -1,0 +1,24 @@
+name: Keep the watcher switched on
+
+# GitHub pauses scheduled workflows in repos with no activity for 60 days.
+# This makes a tiny commit once a month so that never happens.
+on:
+  schedule:
+    - cron: "0 15 1 * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  keepalive:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          date -u > .keepalive
+          git config user.name "siteline-bot"
+          git config user.email "siteline-bot@users.noreply.github.com"
+          git add .keepalive
+          git commit -m "Keep the scheduled watcher active" || exit 0
+          git push
