@@ -86,6 +86,11 @@ def facility_for(cg_ref, cg: dict):
         return None, "Add this campground's Recreation.gov link (the number in it is the campground ID)."
 
     if system == "rc":
+        # Current ReserveCalifornia links look like reservecalifornia.com/park/{park}/{campground}
+        m = re.search(r"reservecalifornia\.com/park/(\d+)/(\d+)", url, re.I)
+        if m:
+            cg_ref.update({"providerFacilityId": m.group(2)})
+            return m.group(2), None
         if cg.get("providerMatches"):
             return None, "Pick which campground to watch on the campground's page."
         return resolve_reservecalifornia(cg_ref, cg)
@@ -106,7 +111,8 @@ def resolve_reservecalifornia(cg_ref, cg: dict):
             found = []
         except Exception as exc:  # noqa: BLE001
             log.warning("Campground lookup for %r failed: %s", term, exc)
-            return None, f"Could not reach ReserveCalifornia to look up the campground ({short_error(exc)})."
+            return None, ("ReserveCalifornia would not let the watcher look up this campground. "
+                          "Paste the campground's ReserveCalifornia page link into its Booking link instead.")
         if not found:
             continue
         matches = [
